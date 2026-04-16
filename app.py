@@ -21,7 +21,7 @@ LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
 
 # Initialize Sarvam client (sahi parameter)
-client = SarvamAI(api_subscription_key=sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y)
+client = SarvamAI(api_subscription_key="SARVAMAI_API_KEY")
 
 # ===== Bot Handlers =====
 async def start(update, context):
