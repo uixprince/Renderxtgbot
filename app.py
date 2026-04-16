@@ -2,28 +2,33 @@ import os
 import io
 import logging
 import base64
-from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from sarvamai import SarvamAI
 
-load_dotenv()
-
+# Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TELEGRAM_BOT_TOKEN = os.getenv("8797339500:AAGGFunjF7QEfZtsyLuccItfVttHVdt95wU")
-SARVAM_API_KEY = os.getenv("sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y")
+# ===== HARDCODED KEYS (Directly daal diye) =====
+TELEGRAM_BOT_TOKEN = "8797339500:AAGGFunjF7QEfZtsyLuccItfVttHVdt95wU"
+SARVAM_API_KEY = "sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y"
 
+# TTS Config
 MODEL = "bulbul:v3"
 SPEAKER = "shubh"
 LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
 
-client = SarvamAI(api_subscription_key="sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y")
+# Initialize Sarvam client (sahi parameter)
+client = SarvamAI(api_subscription_key=sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y)
 
+# ===== Bot Handlers =====
 async def start(update, context):
-    await update.message.reply_text("🎙️ *Sarvam TTS Bot*\nSend me any text, I'll convert to speech.\n/voices - list voices\n/setvoice <name>\n/setlang <code>", parse_mode="Markdown")
+    await update.message.reply_text(
+        "🎙️ *Sarvam TTS Bot*\nSend me any text, I'll convert to speech.\n/voices - list voices\n/setvoice <name>\n/setlang <code>",
+        parse_mode="Markdown"
+    )
 
 async def help_command(update, context):
     await update.message.reply_text("Just type any text. Max 2500 chars.")
@@ -50,25 +55,42 @@ async def text_to_speech(update, context):
     if len(text) > 2500:
         await update.message.reply_text("Text too long (max 2500).")
         return
+
     await update.message.chat.send_action(action="record_voice")
+
     try:
         voice = context.user_data.get('user_voice', SPEAKER)
         lang = context.user_data.get('user_language', LANGUAGE)
+
         processing = await update.message.reply_text(f"🎵 Converting... ({voice}, {lang})")
-        audio_b64 = client.text_to_speech(text=text, target_language_code=lang, speaker=voice, model=MODEL, speech_sample_rate=SAMPLE_RATE, enable_preprocessing=True)
+
+        audio_b64 = client.text_to_speech(
+            text=text,
+            target_language_code=lang,
+            speaker=voice,
+            model=MODEL,
+            speech_sample_rate=SAMPLE_RATE,
+            enable_preprocessing=True
+        )
+
         audio_bytes = base64.b64decode(audio_b64)
         audio_file = io.BytesIO(audio_bytes)
         audio_file.name = "speech.mp3"
+
         await update.message.reply_voice(voice=audio_file, caption=f"Voice: {voice} | Lang: {lang}")
         await processing.delete()
+
     except Exception as e:
-        logger.error(e)
-        await update.message.reply_text(f"Error: {str(e)[:200]}")
+        logger.error(f"TTS error: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)[:200]}")
+
+async def error_handler(update, context):
+    logger.error(f"Update {update} caused error {context.error}")
+    if update and update.effective_message:
+        await update.effective_message.reply_text("❌ Unexpected error. Please try again.")
 
 def main():
-    if not TELEGRAM_BOT_TOKEN or not SARVAM_API_KEY:
-        logger.error("Missing environment variables!")
-        return
+    # No environment variable check – direct use karenge
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
@@ -76,7 +98,9 @@ def main():
     app.add_handler(CommandHandler("setvoice", set_voice))
     app.add_handler(CommandHandler("setlang", set_language))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_to_speech))
-    logger.info("Bot starting...")
+    app.add_error_handler(error_handler)
+
+    logger.info("Bot starting with hardcoded keys...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
