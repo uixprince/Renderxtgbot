@@ -29,7 +29,7 @@ LANGUAGE = "hi-IN"          # default Hindi
 SAMPLE_RATE = 24000
 
 # Initialize Sarvam client (correct class)
-client = SarvamAI(api_key=SARVAM_API_KEY)
+client = SarvamAI(api_key=sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y)
 
 # ===== BOT COMMAND HANDLERS =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
