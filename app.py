@@ -20,7 +20,7 @@ SPEAKER = "shubh"
 LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
 
-client = SarvamAI(api_key=SARVAM_API_KEY)   # ← ab sahi hai
+client = SarvamAI(api_subscription_key=SARVAM_API_KEY)  
 
 async def start(update, context):
     await update.message.reply_text("🎙️ *Sarvam TTS Bot*\nSend me any text, I'll convert to speech.\n/voices - list voices\n/setvoice <name>\n/setlang <code>", parse_mode="Markdown")
