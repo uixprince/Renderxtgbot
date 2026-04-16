@@ -2,6 +2,7 @@ import os
 import io
 import logging
 import base64
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from sarvamai import SarvamAI
@@ -10,7 +11,7 @@ from sarvamai import SarvamAI
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ===== HARDCODED KEYS (Directly daal diye) =====
+# Hardcoded keys
 TELEGRAM_BOT_TOKEN = "8797339500:AAGGFunjF7QEfZtsyLuccItfVttHVdt95wU"
 SARVAM_API_KEY = "sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y"
 
@@ -20,15 +21,10 @@ SPEAKER = "shubh"
 LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
 
-# Initialize Sarvam client (sahi parameter)
-client = SarvamAI(api_subscription_key="SARVAMAI_API_KEY")
+client = SarvamAI(api_subscription_key=SARVAM_API_KEY)
 
-# ===== Bot Handlers =====
 async def start(update, context):
-    await update.message.reply_text(
-        "🎙️ *Sarvam TTS Bot*\nSend me any text, I'll convert to speech.\n/voices - list voices\n/setvoice <name>\n/setlang <code>",
-        parse_mode="Markdown"
-    )
+    await update.message.reply_text("🎙️ *Sarvam TTS Bot*\nSend me any text, I'll convert to speech.\n/voices - list voices\n/setvoice <name>\n/setlang <code>", parse_mode="Markdown")
 
 async def help_command(update, context):
     await update.message.reply_text("Just type any text. Max 2500 chars.")
@@ -90,7 +86,10 @@ async def error_handler(update, context):
         await update.effective_message.reply_text("❌ Unexpected error. Please try again.")
 
 def main():
-    # No environment variable check – direct use karenge
+    # Fix for Python 3.14 event loop issue
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
@@ -99,8 +98,8 @@ def main():
     app.add_handler(CommandHandler("setlang", set_language))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_to_speech))
     app.add_error_handler(error_handler)
-
-    logger.info("Bot starting with hardcoded keys...")
+    
+    logger.info("Bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
