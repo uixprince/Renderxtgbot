@@ -3,25 +3,20 @@ import io
 import logging
 import base64
 import asyncio
+import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from sarvamai import SarvamAI
 
-# Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Hardcoded keys
 TELEGRAM_BOT_TOKEN = "8797339500:AAGGFunjF7QEfZtsyLuccItfVttHVdt95wU"
 SARVAM_API_KEY = "sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y"
 
-# TTS Config
 MODEL = "bulbul:v3"
 SPEAKER = "shubh"
 LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
-
-client = SarvamAI(api_subscription_key=SARVAM_API_KEY)
 
 async def start(update, context):
     await update.message.reply_text("🎙️ *Sarvam TTS Bot*\nSend me any text, I'll convert to speech.\n/voices - list voices\n/setvoice <name>\n/setlang <code>", parse_mode="Markdown")
@@ -60,14 +55,23 @@ async def text_to_speech(update, context):
 
         processing = await update.message.reply_text(f"🎵 Converting... ({voice}, {lang})")
 
-        audio_b64 = client.text_to_speech(
-            text=text,
-            target_language_code=lang,
-            speaker=voice,
-            model=MODEL,
-            speech_sample_rate=SAMPLE_RATE,
-            enable_preprocessing=True
-        )
+        url = "https://api.sarvam.ai/text-to-speech"
+        headers = {
+            "api-subscription-key": SARVAM_API_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "text": text,
+            "target_language_code": lang,
+            "speaker": voice,
+            "model": MODEL,
+            "speech_sample_rate": SAMPLE_RATE,
+            "enable_preprocessing": True
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        audio_b64 = response.json().get("audio_content") or response.json().get("audio")
 
         audio_bytes = base64.b64decode(audio_b64)
         audio_file = io.BytesIO(audio_bytes)
@@ -86,10 +90,8 @@ async def error_handler(update, context):
         await update.effective_message.reply_text("❌ Unexpected error. Please try again.")
 
 def main():
-    # Fix for Python 3.14 event loop issue
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
@@ -98,7 +100,6 @@ def main():
     app.add_handler(CommandHandler("setlang", set_language))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_to_speech))
     app.add_error_handler(error_handler)
-    
     logger.info("Bot starting...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
