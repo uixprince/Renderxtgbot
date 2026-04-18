@@ -1,15 +1,18 @@
 import io
+import os
 import logging
 import base64
 import asyncio
+import threading
 import requests
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ========== CONFIG (Hardcoded for now, but better to use env vars) ==========
+# ========== CONFIG ==========
 TELEGRAM_BOT_TOKEN = "8797339500:AAHDrXZnOsBvltKhvjfy1C5RkFUnDGTMwqQ"
 SARVAM_API_KEY = "sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y"
 
@@ -18,9 +21,29 @@ SPEAKER = "shubh"
 LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
 
+# ========== DUMMY WEB SERVER (RENDER KI REQUIREMENT KE LIYE) ==========
+class DummyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b"Bot is running successfully on Render!")
+    
+    # Logs ko clean rakhne ke liye HTTP requests ko mute kiya hai
+    def log_message(self, format, *args):
+        pass
+
+def keep_alive():
+    # Render khud ek 'PORT' environment variable deta hai, hum wahi use kar rahe hain
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), DummyHandler)
+    logger.info(f"🌐 Dummy web server started on port {port} for Render health checks...")
+    server.serve_forever()
+# ========================================================================
+
 async def start(update: Update, context):
     await update.message.reply_text(
-        "🎙️ *Sarvam TTS Bot* (Background Worker)\n\n"
+        "🎙️ *Sarvam TTS Bot* (Web Service Version)\n\n"
         "Send me any text, I'll convert it to speech.\n"
         "/setvoice <name> - Change voice (e.g., /setvoice ritu)\n"
         "/setlang <code> - Change language (e.g., /setlang en-IN)\n\n"
@@ -78,11 +101,10 @@ async def text_to_speech(update: Update, context):
 
         data = response.json()
         
-        # FIX: Sarvam API 'audios' key mein ek list bhejti hai
+        # Audio extraction (ab yeh fixed hai)
         audios_list = data.get("audios")
-        
         if audios_list and len(audios_list) > 0:
-            audio_b64 = audios_list[0] # List ka pehla audio chunk
+            audio_b64 = audios_list[0] 
         else:
             audio_b64 = None
 
@@ -108,10 +130,14 @@ async def error_handler(update: Update, context):
         await update.effective_message.reply_text("Unexpected error. Please try again.")
 
 def main():
-    # Fix for Python 3.14+ event loop
+    # Render ke liye port open karne wala dummy server background mein chalu karo
+    threading.Thread(target=keep_alive, daemon=True).start()
+
+    # Asyncio loop setup (Python 3.14+ safety)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
+    # Naya Bot Token isemal kiya ja raha hai
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("setvoice", set_voice))
@@ -119,9 +145,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_to_speech))
     app.add_error_handler(error_handler)
     
-    logger.info("🚀 Bot started as Background Worker. Listening for messages...")
+    logger.info("🚀 Bot started. Listening for Telegram messages...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
-    
