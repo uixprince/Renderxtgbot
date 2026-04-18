@@ -46,17 +46,33 @@ HELP_TEXT = (
     f"{FOOTER}"
 )
 
+# Yahan saari voices update kar di gayi hain!
 VOICES_TEXT = (
     "<b>🎭 AVAILABLE VOICES LIST</b>\n\n"
-    "<b>MALE VOICES:</b>\n"
-    "<b>• shubh (Default / Smooth)</b>\n"
-    "<b>• deepak (Deep)</b>\n"
-    "<b>• amit (Clear)</b>\n\n"
-    "<b>FEMALE VOICES:</b>\n"
-    "<b>• ritu (Sweet)</b>\n"
-    "<b>• sneha (Soft)</b>\n"
-    "<b>• arpit (Professional)</b>\n\n"
-    "<b>COMMAND TO SET: /setvoice ritu</b>"
+    "<b>👦 MALE VOICES:</b>\n"
+    "<b>• shubh (Default)</b>\n"
+    "<b>• abhilash</b>\n"
+    "<b>• karun</b>\n"
+    "<b>• hitesh</b>\n"
+    "<b>• aditya</b>\n"
+    "<b>• rahul</b>\n"
+    "<b>• rohan</b>\n"
+    "<b>• deepak</b>\n"
+    "<b>• amit</b>\n"
+    "<b>• arpit</b>\n\n"
+    "<b>👧 FEMALE VOICES:</b>\n"
+    "<b>• anushka</b>\n"
+    "<b>• manisha</b>\n"
+    "<b>• vidya</b>\n"
+    "<b>• arya</b>\n"
+    "<b>• ritu</b>\n"
+    "<b>• priya</b>\n"
+    "<b>• neha</b>\n"
+    "<b>• pooja</b>\n"
+    "<b>• simran</b>\n"
+    "<b>• kavya</b>\n"
+    "<b>• sneha</b>\n\n"
+    "<b>COMMAND TO SET: /setvoice anushka</b>"
     f"{FOOTER}"
 )
 
@@ -203,9 +219,9 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("🚀 BOT DEPLOYED AND READY!")
+    logger.info("🚀 BOT DEPLOYED AND READY WITH ALL VOICES!")
     
-    # YEH LINE JADU HAI - Ye purane fase hue updates ko drop karke naye commands accept karegi
+    # Ye drop_pending_updates wala magic command abhi bhi hai, no conflicts!
     app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 if __name__ == "__main__":
