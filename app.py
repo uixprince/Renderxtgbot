@@ -17,9 +17,15 @@ TELEGRAM_BOT_TOKEN = "8797339500:AAHDrXZnOsBvltKhvjfy1C5RkFUnDGTMwqQ"
 SARVAM_API_KEY = "sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y"
 
 MODEL = "bulbul:v3"
-DEFAULT_SPEAKER = "shubh"
+DEFAULT_SPEAKER = "aditya"
 DEFAULT_LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
+
+# Working 25 Voices List
+VALID_VOICES = [
+    "aditya", "rahul", "rohan", "amit", "dev", "ratan", "varun", "manan", "sumit", "kabir", "aayan", "shubh", "ashutosh", "advait",
+    "ritu", "priya", "neha", "pooja", "simran", "kavya", "ishita", "shreya", "roopa", "amelia", "sophia"
+]
 
 # HTML Format Mention - Clickable Name
 OWNER_LINK = "https://t.me/KYA_KROGE_NAME_JAANKE"
@@ -46,33 +52,21 @@ HELP_TEXT = (
     f"{FOOTER}"
 )
 
-# Yahan saari voices update kar di gayi hain!
 VOICES_TEXT = (
-    "<b>🎭 AVAILABLE VOICES LIST</b>\n\n"
-    "<b>👦 MALE VOICES:</b>\n"
-    "<b>• shubh (Default)</b>\n"
-    "<b>• abhilash</b>\n"
-    "<b>• karun</b>\n"
-    "<b>• hitesh</b>\n"
-    "<b>• aditya</b>\n"
-    "<b>• rahul</b>\n"
-    "<b>• rohan</b>\n"
-    "<b>• deepak</b>\n"
-    "<b>• amit</b>\n"
-    "<b>• arpit</b>\n\n"
-    "<b>👧 FEMALE VOICES:</b>\n"
-    "<b>• anushka</b>\n"
-    "<b>• manisha</b>\n"
-    "<b>• vidya</b>\n"
-    "<b>• arya</b>\n"
-    "<b>• ritu</b>\n"
-    "<b>• priya</b>\n"
-    "<b>• neha</b>\n"
-    "<b>• pooja</b>\n"
-    "<b>• simran</b>\n"
-    "<b>• kavya</b>\n"
-    "<b>• sneha</b>\n\n"
-    "<b>COMMAND TO SET: /setvoice anushka</b>"
+    "<b>🎭 OFFICIAL BULBUL-V3 VOICES</b>\n\n"
+    "<b>👦 MALE VOICES (14):</b>\n"
+    "<b>• aditya (Default)</b> | <b>• rahul</b>\n"
+    "<b>• rohan</b> | <b>• amit</b> | <b>• dev</b>\n"
+    "<b>• ratan</b> | <b>• varun</b> | <b>• manan</b>\n"
+    "<b>• sumit</b> | <b>• kabir</b> | <b>• aayan</b>\n"
+    "<b>• shubh</b> | <b>• ashutosh</b> | <b>• advait</b>\n\n"
+    "<b>👧 FEMALE VOICES (11):</b>\n"
+    "<b>• ritu</b> | <b>• priya</b> | <b>• neha</b>\n"
+    "<b>• pooja</b> | <b>• simran</b> | <b>• kavya</b>\n"
+    "<b>• ishita</b> | <b>• shreya</b> | <b>• roopa</b>\n"
+    "<b>• amelia</b> | <b>• sophia</b>\n\n"
+    "<b>🎧 LISTEN SAMPLE: /sample ritu</b>\n"
+    "<b>✅ COMMAND TO SET: /setvoice ritu</b>"
     f"{FOOTER}"
 )
 
@@ -94,8 +88,9 @@ USAGE_TEXT = (
     "<b>🛠️ BOT USAGE GUIDE</b>\n\n"
     "<b>1️⃣ /tts &lt;text&gt; - Generate voice (Example: /tts Hello Boss)</b>\n"
     "<b>2️⃣ /setvoice &lt;name&gt; - Set your preferred voice.</b>\n"
-    "<b>3️⃣ /setlang &lt;lang_code&gt; - Change the language.</b>\n"
-    "<b>4️⃣ /help - Open the main help menu.</b>\n\n"
+    "<b>3️⃣ /sample &lt;name&gt; - Listen to a voice before setting it.</b>\n"
+    "<b>4️⃣ /setlang &lt;lang_code&gt; - Change the language.</b>\n"
+    "<b>5️⃣ /help - Open the main help menu.</b>\n\n"
     "<b>⚠️ Normal messages are ignored. Use the /tts command to generate speech.</b>"
     f"{FOOTER}"
 )
@@ -151,6 +146,10 @@ async def set_voice(update: Update, context):
     if not context.args:
         return await update.message.reply_text("<b>USAGE: /setvoice ritu</b>", parse_mode="HTML")
     voice = context.args[0].lower()
+    
+    if voice not in VALID_VOICES:
+        return await update.message.reply_text("<b>❌ INVALID VOICE! Use /voices to check the list.</b>", parse_mode="HTML")
+        
     context.user_data['user_voice'] = voice
     await update.message.reply_text(f"<b>✅ VOICE UPDATED TO: {voice.upper()}</b>", parse_mode="HTML")
 
@@ -160,6 +159,54 @@ async def set_language(update: Update, context):
     lang = context.args[0]
     context.user_data['user_language'] = lang
     await update.message.reply_text(f"<b>✅ LANGUAGE UPDATED TO: {lang.upper()}</b>", parse_mode="HTML")
+
+# NAYA COMMAND: SAMPLE VOICE GENERATOR
+async def sample_voice(update: Update, context):
+    if not context.args:
+        return await update.message.reply_text("<b>USAGE: /sample ritu</b>", parse_mode="HTML")
+    
+    voice = context.args[0].lower()
+    if voice not in VALID_VOICES:
+        return await update.message.reply_text("<b>❌ INVALID VOICE! Use /voices to check the list.</b>", parse_mode="HTML")
+        
+    await update.message.chat.send_action(action="record_voice")
+    processing = await update.message.reply_text(f"<b>🎵 GENERATING SAMPLE FOR {voice.upper()}...</b>", parse_mode="HTML")
+    
+    # Mix of Hindi and English for best sample experience
+    sample_text = f"Namaste, mera naam {voice.capitalize()} hai. This is my voice sample, check it out!"
+    
+    try:
+        response = requests.post(
+            "https://api.sarvam.ai/text-to-speech",
+            headers={"api-subscription-key": SARVAM_API_KEY, "Content-Type": "application/json"},
+            json={
+                "text": sample_text, "target_language_code": "hi-IN", "speaker": voice,
+                "model": MODEL, "speech_sample_rate": SAMPLE_RATE, "enable_preprocessing": True
+            },
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            await processing.edit_text(f"<b>❌ API ERROR: {response.status_code}</b>", parse_mode="HTML")
+            return
+            
+        data = response.json()
+        audio_b64 = data.get("audios", [None])[0]
+
+        if not audio_b64:
+            await processing.edit_text("<b>❌ FAILED TO RECEIVE AUDIO.</b>", parse_mode="HTML")
+            return
+
+        audio_file = io.BytesIO(base64.b64decode(audio_b64))
+        audio_file.name = f"{voice}_sample.mp3"
+
+        caption = f"<b>🎧 SAMPLE VOICE: {voice.upper()}</b>{FOOTER}"
+        await update.message.reply_voice(voice=audio_file, caption=caption, parse_mode="HTML")
+        await processing.delete()
+
+    except Exception as e:
+        logger.error(f"Sample TTS Error: {e}")
+        await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>", parse_mode="HTML")
 
 async def text_to_speech(update: Update, context):
     text = " ".join(context.args)
@@ -183,6 +230,10 @@ async def text_to_speech(update: Update, context):
             timeout=30
         )
         
+        if response.status_code != 200:
+            await processing.edit_text(f"<b>❌ API ERROR: {response.status_code} - Shayad Voice ya Lang galat hai!</b>", parse_mode="HTML")
+            return
+            
         data = response.json()
         audio_b64 = data.get("audios", [None])[0]
 
@@ -215,13 +266,12 @@ def main():
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("setvoice", set_voice))
     app.add_handler(CommandHandler("setlang", set_language))
+    app.add_handler(CommandHandler("sample", sample_voice)) # Sample Command added here
     app.add_handler(CommandHandler("tts", text_to_speech))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("🚀 BOT DEPLOYED AND READY WITH ALL VOICES!")
-    
-    # Ye drop_pending_updates wala magic command abhi bhi hai, no conflicts!
+    logger.info("🚀 BOT DEPLOYED WITH SAMPLE SYSTEM!")
     app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 if __name__ == "__main__":
