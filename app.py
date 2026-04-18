@@ -137,6 +137,10 @@ async def text_to_speech(update: Update, context):
 def main():
     threading.Thread(target=keep_alive, daemon=True).start()
     
+    # FIX: Python 3.14 Event Loop Crash Fix
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     
     # Commands
