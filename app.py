@@ -84,44 +84,21 @@ USAGE_TEXT = (
     f"{FOOTER}"
 )
 
-# ========== COLOR BUTTON PATCH (THE MAGIC) ==========
-class ColorButton(InlineKeyboardButton):
-    """
-    Custom Button Class to bypass python-telegram-bot's missing support
-    and force the 'style' parameter into the Telegram JSON API.
-    """
-    def __init__(self, text, callback_data=None, url=None, style=None, **kwargs):
-        super().__init__(text=text, callback_data=callback_data, url=url, **kwargs)
-        self.style = style
-
-    def to_dict(self):
-        data = super().to_dict()
-        if self.style:
-            data['style'] = self.style
-        return data
-
-# ========== KEYBOARDS (NOW WITH ACTUAL COLORS) ==========
+# ========== KEYBOARDS ==========
 def get_start_keyboard():
     return InlineKeyboardMarkup([
-        [ColorButton("GET STARTED (HELP)", callback_data='help_back', style='success')]
+        [InlineKeyboardButton("🟢 GET STARTED (HELP)", callback_data='help_back')]
     ])
 
 def get_main_keyboard():
-    # 2x2 Grid Layout with Telegram API 9.4+ color styles
     return InlineKeyboardMarkup([
-        [
-            ColorButton("VOICES", callback_data='v_list', style='primary'), 
-            ColorButton("LANGUAGES", callback_data='l_list', style='primary')
-        ],
-        [
-            ColorButton("USAGE GUIDE", callback_data='u_guide', style='danger'), 
-            ColorButton("OWNER", url=OWNER_LINK, style='success')
-        ]
+        [InlineKeyboardButton("🔵 VOICES", callback_data='v_list'), InlineKeyboardButton("🟡 LANGUAGES", callback_data='l_list')],
+        [InlineKeyboardButton("🔴 USAGE GUIDE", callback_data='u_guide'), InlineKeyboardButton("👑 OWNER", url=OWNER_LINK)]
     ])
 
 def get_back_keyboard():
     return InlineKeyboardMarkup([
-        [ColorButton("🔙 BACK TO MENU", callback_data='help_back', style='danger')]
+        [InlineKeyboardButton("🔙 BACK TO MENU", callback_data='help_back')]
     ])
 
 # ========== COMMAND HANDLERS ==========
@@ -144,7 +121,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer() 
     
     data = query.data
-    
     if data == 'help_back':
         await query.edit_message_text(text=HELP_TEXT, parse_mode="HTML", reply_markup=get_main_keyboard(), disable_web_page_preview=True)
     elif data == 'v_list':
@@ -202,7 +178,6 @@ async def text_to_speech(update: Update, context):
         audio_file.name = "voice.mp3"
 
         caption = f"<b>🔊 VOICE: {voice.upper()}</b>\n<b>🌐 LANG: {lang.upper()}</b>{FOOTER}"
-        
         await update.message.reply_voice(voice=audio_file, caption=caption, parse_mode="HTML")
         await processing.delete()
 
@@ -228,8 +203,10 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_error_handler(error_handler)
 
-    logger.info("🚀 VIP PREMIUM BOT DEPLOYED AND STABLE!")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    logger.info("🚀 BOT DEPLOYED AND READY!")
+    
+    # YEH LINE JADU HAI - Ye purane fase hue updates ko drop karke naye commands accept karegi
+    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
