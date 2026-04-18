@@ -84,39 +84,47 @@ USAGE_TEXT = (
     f"{FOOTER}"
 )
 
-# ========== KEYBOARDS (COLORFUL BUTTONS BYPASS) ==========
+# ========== COLOR BUTTON PATCH (THE MAGIC) ==========
+class ColorButton(InlineKeyboardButton):
+    """
+    Custom Button Class to bypass python-telegram-bot's missing support
+    and force the 'style' parameter into the Telegram JSON API.
+    """
+    def __init__(self, text, callback_data=None, url=None, style=None, **kwargs):
+        super().__init__(text=text, callback_data=callback_data, url=url, **kwargs)
+        self.style = style
+
+    def to_dict(self):
+        data = super().to_dict()
+        if self.style:
+            data['style'] = self.style
+        return data
+
+# ========== KEYBOARDS (NOW WITH ACTUAL COLORS) ==========
 def get_start_keyboard():
-    btn = InlineKeyboardButton("GET STARTED (HELP)", callback_data='help_back')
-    btn.api_kwargs = {'style': 'success'} # Green Color
-    return InlineKeyboardMarkup([[btn]])
+    return InlineKeyboardMarkup([
+        [ColorButton("GET STARTED (HELP)", callback_data='help_back', style='success')]
+    ])
 
 def get_main_keyboard():
-    # Adding colors dynamically using api_kwargs
-    btn_voices = InlineKeyboardButton("VOICES", callback_data='v_list')
-    btn_voices.api_kwargs = {'style': 'primary'} # Blue Color
-    
-    btn_langs = InlineKeyboardButton("LANGUAGES", callback_data='l_list')
-    btn_langs.api_kwargs = {'style': 'primary'} # Blue Color
-    
-    btn_usage = InlineKeyboardButton("USAGE GUIDE", callback_data='u_guide')
-    btn_usage.api_kwargs = {'style': 'danger'} # Red Color
-    
-    btn_owner = InlineKeyboardButton("OWNER", url=OWNER_LINK)
-    btn_owner.api_kwargs = {'style': 'success'} # Green Color
-    
-    # 2x2 Grid Layout
+    # 2x2 Grid Layout with Telegram API 9.4+ color styles
     return InlineKeyboardMarkup([
-        [btn_voices, btn_langs],
-        [btn_usage, btn_owner]
+        [
+            ColorButton("VOICES", callback_data='v_list', style='primary'), 
+            ColorButton("LANGUAGES", callback_data='l_list', style='primary')
+        ],
+        [
+            ColorButton("USAGE GUIDE", callback_data='u_guide', style='danger'), 
+            ColorButton("OWNER", url=OWNER_LINK, style='success')
+        ]
     ])
 
 def get_back_keyboard():
-    btn_back = InlineKeyboardButton("🔙 BACK TO MENU", callback_data='help_back')
-    btn_back.api_kwargs = {'style': 'danger'} # Red Color
-    return InlineKeyboardMarkup([[btn_back]])
+    return InlineKeyboardMarkup([
+        [ColorButton("🔙 BACK TO MENU", callback_data='help_back', style='danger')]
+    ])
 
 # ========== COMMAND HANDLERS ==========
-
 async def start(update: Update, context):
     msg = (
         "<b>🎙️ WELCOME TO THE PREMIUM SARVAM TTS BOT!</b>\n\n"
@@ -202,6 +210,9 @@ async def text_to_speech(update: Update, context):
         logger.error(f"TTS Error: {e}")
         await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>", parse_mode="HTML")
 
+async def error_handler(update: Update, context):
+    logger.error(f"CRITICAL Update error: {context.error}")
+
 def main():
     threading.Thread(target=keep_alive, daemon=True).start()
     loop = asyncio.new_event_loop()
@@ -215,9 +226,11 @@ def main():
     app.add_handler(CommandHandler("setlang", set_language))
     app.add_handler(CommandHandler("tts", text_to_speech))
     app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_error_handler(error_handler)
 
-    logger.info("🚀 VIP PREMIUM BOT DEPLOYED WITH COLORED BUTTONS!")
+    logger.info("🚀 VIP PREMIUM BOT DEPLOYED AND STABLE!")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
+    
