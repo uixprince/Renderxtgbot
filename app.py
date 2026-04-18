@@ -77,11 +77,15 @@ async def text_to_speech(update: Update, context):
             return
 
         data = response.json()
-        # Sarvam API actual response mein 'audio_content' key hoti hai
-        audio_b64 = data.get("audio_content")
-        if not audio_b64:
-            # Fallback: try other common keys
-            audio_b64 = data.get("audio") or data.get("data")
+        
+        # FIX: Sarvam API 'audios' key mein ek list bhejti hai
+        audios_list = data.get("audios")
+        
+        if audios_list and len(audios_list) > 0:
+            audio_b64 = audios_list[0] # List ka pehla audio chunk
+        else:
+            audio_b64 = None
+
         if not audio_b64:
             await update.message.reply_text(f"❌ No audio in response. Keys: {list(data.keys())}")
             await processing.delete()
@@ -120,3 +124,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
