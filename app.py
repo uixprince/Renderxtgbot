@@ -21,13 +21,12 @@ DEFAULT_SPEAKER = "aditya"
 DEFAULT_LANGUAGE = "hi-IN"
 SAMPLE_RATE = 24000
 
-# Working 25 Voices List
+# ONLY 100% STABLE VOICES FOR V3
 VALID_VOICES = [
     "aditya", "rahul", "rohan", "amit", "dev", "ratan", "varun", "manan", "sumit", "kabir", "aayan", "shubh", "ashutosh", "advait",
-    "ritu", "priya", "neha", "pooja", "simran", "kavya", "ishita", "shreya", "roopa", "amelia", "sophia"
+    "ritu", "priya", "neha", "pooja", "simran", "kavya", "ishita", "shreya", "roopa"
 ]
 
-# HTML Format Mention - Clickable Name
 OWNER_LINK = "https://t.me/KYA_KROGE_NAME_JAANKE"
 FOOTER = f'\n\n<b>POWERED BY <a href="{OWNER_LINK}">ᏢᎡϟꋊᏣᎬ༒࿗</a></b>'
 
@@ -53,53 +52,25 @@ HELP_TEXT = (
 )
 
 VOICES_TEXT = (
-    "<b>🎭 OFFICIAL BULBUL-V3 VOICES</b>\n\n"
-    "<b>👦 MALE VOICES (14):</b>\n"
-    "<b>• aditya (Default)</b> | <b>• rahul</b>\n"
-    "<b>• rohan</b> | <b>• amit</b> | <b>• dev</b>\n"
-    "<b>• ratan</b> | <b>• varun</b> | <b>• manan</b>\n"
-    "<b>• sumit</b> | <b>• kabir</b> | <b>• aayan</b>\n"
-    "<b>• shubh</b> | <b>• ashutosh</b> | <b>• advait</b>\n\n"
-    "<b>👧 FEMALE VOICES (11):</b>\n"
+    "<b>🎭 STABLE BULBUL-V3 VOICES</b>\n\n"
+    "<b>👦 MALE VOICES:</b>\n"
+    "<b>• aditya</b> | <b>• rahul</b> | <b>• rohan</b>\n"
+    "<b>• amit</b> | <b>• dev</b> | <b>• ratan</b>\n"
+    "<b>• varun</b> | <b>• manan</b> | <b>• sumit</b>\n"
+    "<b>• kabir</b> | <b>• aayan</b> | <b>• shubh</b>\n"
+    "<b>• ashutosh</b> | <b>• advait</b>\n\n"
+    "<b>👧 FEMALE VOICES:</b>\n"
     "<b>• ritu</b> | <b>• priya</b> | <b>• neha</b>\n"
     "<b>• pooja</b> | <b>• simran</b> | <b>• kavya</b>\n"
-    "<b>• ishita</b> | <b>• shreya</b> | <b>• roopa</b>\n"
-    "<b>• amelia</b> | <b>• sophia</b>\n\n"
+    "<b>• ishita</b> | <b>• shreya</b> | <b>• roopa</b>\n\n"
     "<b>🎧 LISTEN SAMPLE: /sample ritu</b>\n"
     "<b>✅ COMMAND TO SET: /setvoice ritu</b>"
     f"{FOOTER}"
 )
 
-LANGS_TEXT = (
-    "<b>🌐 SUPPORTED LANGUAGES</b>\n\n"
-    "<b>• hi-IN (Hindi)</b>\n"
-    "<b>• en-IN (English)</b>\n"
-    "<b>• ta-IN (Tamil)</b>\n"
-    "<b>• te-IN (Telugu)</b>\n"
-    "<b>• bn-IN (Bengali)</b>\n"
-    "<b>• mr-IN (Marathi)</b>\n"
-    "<b>• gu-IN (Gujarati)</b>\n"
-    "<b>• kn-IN (Kannada)</b>\n\n"
-    "<b>COMMAND TO SET: /setlang en-IN</b>"
-    f"{FOOTER}"
-)
-
-USAGE_TEXT = (
-    "<b>🛠️ BOT USAGE GUIDE</b>\n\n"
-    "<b>1️⃣ /tts &lt;text&gt; - Generate voice (Example: /tts Hello Boss)</b>\n"
-    "<b>2️⃣ /setvoice &lt;name&gt; - Set your preferred voice.</b>\n"
-    "<b>3️⃣ /sample &lt;name&gt; - Listen to a voice before setting it.</b>\n"
-    "<b>4️⃣ /setlang &lt;lang_code&gt; - Change the language.</b>\n"
-    "<b>5️⃣ /help - Open the main help menu.</b>\n\n"
-    "<b>⚠️ Normal messages are ignored. Use the /tts command to generate speech.</b>"
-    f"{FOOTER}"
-)
-
 # ========== KEYBOARDS ==========
 def get_start_keyboard():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 GET STARTED (HELP)", callback_data='help_back')]
-    ])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🟢 GET STARTED (HELP)", callback_data='help_back')]])
 
 def get_main_keyboard():
     return InlineKeyboardMarkup([
@@ -108,14 +79,14 @@ def get_main_keyboard():
     ])
 
 def get_back_keyboard():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 BACK TO MENU", callback_data='help_back')]
-    ])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 BACK TO MENU", callback_data='help_back')]])
 
 # ========== COMMAND HANDLERS ==========
 async def start(update: Update, context):
+    user = update.effective_user
+    # HELLO USER MENTION ADDED HERE
     msg = (
-        "<b>🎙️ WELCOME TO THE PREMIUM SARVAM TTS BOT!</b>\n\n"
+        f"<b>HELLO {user.mention_html()}, WELCOME TO THE PREMIUM SARVAM TTS BOT!</b>\n\n"
         "<b>I CAN CONVERT YOUR TEXT INTO CRYSTAL CLEAR VOICES.</b>\n"
         "<b>HIGH-QUALITY NEURAL SPEECH GENERATION IS NOW AT YOUR FINGERTIPS.</b>\n\n"
         "<b>CLICK THE BUTTON BELOW TO GET STARTED!</b>"
@@ -126,152 +97,91 @@ async def start(update: Update, context):
 async def help_cmd(update: Update, context):
     await update.message.reply_text(HELP_TEXT, parse_mode="HTML", reply_markup=get_main_keyboard(), disable_web_page_preview=True)
 
+async def voices_cmd(update: Update, context):
+    await update.message.reply_text(VOICES_TEXT, parse_mode="HTML", disable_web_page_preview=True)
+
 # ========== BUTTON CLICK HANDLER ==========
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer() 
-    
-    data = query.data
-    if data == 'help_back':
+    if query.data == 'help_back':
         await query.edit_message_text(text=HELP_TEXT, parse_mode="HTML", reply_markup=get_main_keyboard(), disable_web_page_preview=True)
-    elif data == 'v_list':
+    elif query.data == 'v_list':
         await query.edit_message_text(text=VOICES_TEXT, parse_mode="HTML", reply_markup=get_back_keyboard(), disable_web_page_preview=True)
-    elif data == 'l_list':
-        await query.edit_message_text(text=LANGS_TEXT, parse_mode="HTML", reply_markup=get_back_keyboard(), disable_web_page_preview=True)
-    elif data == 'u_guide':
-        await query.edit_message_text(text=USAGE_TEXT, parse_mode="HTML", reply_markup=get_back_keyboard(), disable_web_page_preview=True)
 
 # ========== TTS AND SETTINGS HANDLERS ==========
 async def set_voice(update: Update, context):
     if not context.args:
         return await update.message.reply_text("<b>USAGE: /setvoice ritu</b>", parse_mode="HTML")
     voice = context.args[0].lower()
-    
     if voice not in VALID_VOICES:
         return await update.message.reply_text("<b>❌ INVALID VOICE! Use /voices to check the list.</b>", parse_mode="HTML")
-        
     context.user_data['user_voice'] = voice
     await update.message.reply_text(f"<b>✅ VOICE UPDATED TO: {voice.upper()}</b>", parse_mode="HTML")
 
-async def set_language(update: Update, context):
-    if not context.args:
-        return await update.message.reply_text("<b>USAGE: /setlang en-IN</b>", parse_mode="HTML")
-    lang = context.args[0]
-    context.user_data['user_language'] = lang
-    await update.message.reply_text(f"<b>✅ LANGUAGE UPDATED TO: {lang.upper()}</b>", parse_mode="HTML")
-
-# NAYA COMMAND: SAMPLE VOICE GENERATOR
 async def sample_voice(update: Update, context):
     if not context.args:
         return await update.message.reply_text("<b>USAGE: /sample ritu</b>", parse_mode="HTML")
-    
     voice = context.args[0].lower()
     if voice not in VALID_VOICES:
-        return await update.message.reply_text("<b>❌ INVALID VOICE! Use /voices to check the list.</b>", parse_mode="HTML")
-        
+        return await update.message.reply_text("<b>❌ INVALID VOICE!</b>", parse_mode="HTML")
     await update.message.chat.send_action(action="record_voice")
     processing = await update.message.reply_text(f"<b>🎵 GENERATING SAMPLE FOR {voice.upper()}...</b>", parse_mode="HTML")
-    
-    # Mix of Hindi and English for best sample experience
-    sample_text = f"Namaste, mera naam {voice.capitalize()} hai. This is my voice sample, check it out!"
-    
     try:
         response = requests.post(
             "https://api.sarvam.ai/text-to-speech",
             headers={"api-subscription-key": SARVAM_API_KEY, "Content-Type": "application/json"},
-            json={
-                "text": sample_text, "target_language_code": "hi-IN", "speaker": voice,
-                "model": MODEL, "speech_sample_rate": SAMPLE_RATE, "enable_preprocessing": True
-            },
+            json={"text": f"Namaste, mera naam {voice} hai. This is my voice sample.", "target_language_code": "hi-IN", "speaker": voice, "model": MODEL, "speech_sample_rate": SAMPLE_RATE, "enable_preprocessing": True},
             timeout=30
         )
-        
-        if response.status_code != 200:
-            await processing.edit_text(f"<b>❌ API ERROR: {response.status_code}</b>", parse_mode="HTML")
-            return
-            
-        data = response.json()
-        audio_b64 = data.get("audios", [None])[0]
-
+        audio_b64 = response.json().get("audios", [None])[0]
         if not audio_b64:
-            await processing.edit_text("<b>❌ FAILED TO RECEIVE AUDIO.</b>", parse_mode="HTML")
-            return
-
+            return await processing.edit_text("<b>❌ FAILED TO RECEIVE AUDIO.</b>")
         audio_file = io.BytesIO(base64.b64decode(audio_b64))
         audio_file.name = f"{voice}_sample.mp3"
-
-        caption = f"<b>🎧 SAMPLE VOICE: {voice.upper()}</b>{FOOTER}"
-        await update.message.reply_voice(voice=audio_file, caption=caption, parse_mode="HTML")
+        await update.message.reply_voice(voice=audio_file, caption=f"<b>🎧 SAMPLE VOICE: {voice.upper()}</b>{FOOTER}", parse_mode="HTML")
         await processing.delete()
-
     except Exception as e:
-        logger.error(f"Sample TTS Error: {e}")
-        await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>", parse_mode="HTML")
+        await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>")
 
 async def text_to_speech(update: Update, context):
     text = " ".join(context.args)
     if not text:
         return await update.message.reply_text("<b>⚠️ INPUT TEXT REQUIRED! EXAMPLE: /tts Hello Boss</b>", parse_mode="HTML")
-
     await update.message.chat.send_action(action="record_voice")
     voice = context.user_data.get('user_voice', DEFAULT_SPEAKER)
     lang = context.user_data.get('user_language', DEFAULT_LANGUAGE)
-    
     processing = await update.message.reply_text(f"<b>🎵 PROCESSING YOUR REQUEST... ({voice.upper()})</b>", parse_mode="HTML")
-
     try:
         response = requests.post(
             "https://api.sarvam.ai/text-to-speech",
             headers={"api-subscription-key": SARVAM_API_KEY, "Content-Type": "application/json"},
-            json={
-                "text": text, "target_language_code": lang, "speaker": voice,
-                "model": MODEL, "speech_sample_rate": SAMPLE_RATE, "enable_preprocessing": True
-            },
+            json={"text": text, "target_language_code": lang, "speaker": voice, "model": MODEL, "speech_sample_rate": SAMPLE_RATE, "enable_preprocessing": True},
             timeout=30
         )
-        
-        if response.status_code != 200:
-            await processing.edit_text(f"<b>❌ API ERROR: {response.status_code} - Shayad Voice ya Lang galat hai!</b>", parse_mode="HTML")
-            return
-            
-        data = response.json()
-        audio_b64 = data.get("audios", [None])[0]
-
+        audio_b64 = response.json().get("audios", [None])[0]
         if not audio_b64:
-            await processing.edit_text("<b>❌ FAILED TO RECEIVE AUDIO FROM API.</b>", parse_mode="HTML")
-            return
-
+            return await processing.edit_text("<b>❌ FAILED TO RECEIVE AUDIO.</b>")
         audio_file = io.BytesIO(base64.b64decode(audio_b64))
         audio_file.name = "voice.mp3"
-
-        caption = f"<b>🔊 VOICE: {voice.upper()}</b>\n<b>🌐 LANG: {lang.upper()}</b>{FOOTER}"
-        await update.message.reply_voice(voice=audio_file, caption=caption, parse_mode="HTML")
+        await update.message.reply_voice(voice=audio_file, caption=f"<b>🔊 VOICE: {voice.upper()}</b>\n{FOOTER}", parse_mode="HTML")
         await processing.delete()
-
     except Exception as e:
-        logger.error(f"TTS Error: {e}")
-        await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>", parse_mode="HTML")
-
-async def error_handler(update: Update, context):
-    logger.error(f"CRITICAL Update error: {context.error}")
+        await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>")
 
 def main():
     threading.Thread(target=keep_alive, daemon=True).start()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("voices", voices_cmd)) # DIRECT CMD ADDED
     app.add_handler(CommandHandler("setvoice", set_voice))
-    app.add_handler(CommandHandler("setlang", set_language))
-    app.add_handler(CommandHandler("sample", sample_voice)) # Sample Command added here
+    app.add_handler(CommandHandler("sample", sample_voice))
     app.add_handler(CommandHandler("tts", text_to_speech))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_error_handler(error_handler)
-
-    logger.info("🚀 BOT DEPLOYED WITH SAMPLE SYSTEM!")
+    logger.info("🚀 STABLE BOT DEPLOYED!")
     app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
 
 if __name__ == "__main__":
