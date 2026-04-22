@@ -20,22 +20,24 @@ SARVAM_API_KEY = "sk_90f9w85z_MXwZGYjXzrlhjWZY4vaK5F5Y"
 DEFAULT_MODEL = "bulbul:v3"
 DEFAULT_SPEAKER = "aditya"
 DEFAULT_LANGUAGE = "hi-IN"
-DEFAULT_PACE = 1.0 # Normal Speed
+DEFAULT_PACE = 1.0 
 SAMPLE_RATE = 24000
 
 OWNER_LINK = "https://t.me/KYA_KROGE_NAME_JAANKE"
 FOOTER = f'\n\n<b>POWERED BY <a href="{OWNER_LINK}">ᏢᎡϟꋊᏣᎬ༒࿗</a></b>'
 
-# ========== VOICE DATABASES ==========
+# ========== FULL VOICE DATABASE ==========
 VOICES_V3_MALE = ["aditya", "rahul", "rohan", "amit", "dev", "ratan", "varun", "manan", "sumit", "kabir", "aayan", "shubh", "ashutosh", "advait"]
-VOICES_V3_FEMALE = ["ritu", "priya", "neha", "pooja", "simran", "kavya", "ishita", "shreya", "roopa"]
+VOICES_V3_FEMALE = ["ritu", "priya", "neha", "pooja", "simran", "kavya", "ishita", "shreya", "roopa", "amelia", "sophia"]
 
-# Sample of V1 Voices (The old 50+ list)
-VOICES_V1_MALE = ["abhilash", "karun", "hitesh", "samir", "pranav", "karan", "vikram"]
-VOICES_V1_FEMALE = ["anushka", "manisha", "vidya", "arya", "sonia", "tanvi", "kiara"]
+VOICES_V1_MALE = ["abhilash", "karun", "hitesh", "samir", "pranav", "karan", "vikram", "ajit", "alok", "deepak", "gourav", "jatin", "lalit", "mahesh", "nitin", "omkar", "piyush", "rajat", "sagar", "tarun", "umesh", "vinay"]
+VOICES_V1_FEMALE = ["anushka", "manisha", "vidya", "arya", "sonia", "tanvi", "kiara", "bharti", "chitra", "divya", "esha", "falak", "geeta", "heena", "indu", "jaya", "kirti", "latika", "meena", "nidhi", "payal", "reema"]
 
-# 🌟 BEST CURATED VOICES (Top tier realistic voices)
-BEST_VOICES = ["aditya", "ritu", "shubh", "priya", "amit", "neha", "rohan", "kavya"]
+LANGUAGES = {
+    "Hindi 🇮🇳": "hi-IN", "English 🇺🇸": "en-IN", "Tamil 🇮🇳": "ta-IN", 
+    "Telugu 🇮🇳": "te-IN", "Bengali 🇮🇳": "bn-IN", "Marathi 🇮🇳": "mr-IN", 
+    "Gujarati 🇮🇳": "gu-IN", "Kannada 🇮🇳": "kn-IN", "Malayalam 🇮🇳": "ml-IN"
+}
 
 # ========== DUMMY SERVER FOR RENDER ==========
 class DummyHandler(BaseHTTPRequestHandler):
@@ -50,31 +52,30 @@ def keep_alive():
     server = HTTPServer(('0.0.0.0', port), DummyHandler)
     server.serve_forever()
 
-# ========== UI KEYBOARDS GENERATORS ==========
+# ========== UI KEYBOARDS ==========
 def kb_main_menu():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("⭐ Best Voices (Top Picks)", callback_data='nav_best')],
-        [InlineKeyboardButton("🎙️ Bulbul V3 (25 Premium)", callback_data='nav_v3')],
-        [InlineKeyboardButton("📻 Bulbul V1 (Classic 50+)", callback_data='nav_v1')],
-        [InlineKeyboardButton("⚙️ Speed Control", callback_data='nav_speed')],
-        [InlineKeyboardButton("👑 Owner Info", url=OWNER_LINK)]
+        [InlineKeyboardButton("🎙️ Bulbul V3 (25 Voices)", callback_data='nav_v3'), InlineKeyboardButton("📻 Bulbul V1 (50+ Voices)", callback_data='nav_v1')],
+        [InlineKeyboardButton("🌐 Languages", callback_data='nav_lang'), InlineKeyboardButton("⚙️ Speed", callback_data='nav_speed')],
+        [InlineKeyboardButton("📖 Help & Usage Details", callback_data='nav_help')],
+        [InlineKeyboardButton("👑 Owner", url=OWNER_LINK)]
     ])
 
-def kb_gender_menu(version):
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("👦 Male Voices", callback_data=f'gen_{version}_m'), InlineKeyboardButton("👧 Female Voices", callback_data=f'gen_{version}_f')],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data='nav_main')]
-    ])
+def kb_help_details():
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Menu", callback_data='nav_main')]])
 
-def kb_speed_menu():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🐢 Slow (0.8x)", callback_data='spd_0.85'), InlineKeyboardButton("🚶 Normal (1.0x)", callback_data='spd_1.0')],
-        [InlineKeyboardButton("🏃 Fast (1.2x)", callback_data='spd_1.2')],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data='nav_main')]
-    ])
+def kb_lang_menu():
+    keyboard = []
+    row = []
+    for name, code in LANGUAGES.items():
+        row.append(InlineKeyboardButton(name, callback_data=f'setl_{code}'))
+        if len(row) == 2:
+            keyboard.append(row)
+            row = []
+    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data='nav_main')])
+    return InlineKeyboardMarkup(keyboard)
 
 def kb_voice_grid(voices, version, back_callback):
-    # Generates a 3-column grid for voices
     keyboard = []
     row = []
     for voice in voices:
@@ -82,170 +83,87 @@ def kb_voice_grid(voices, version, back_callback):
         if len(row) == 3:
             keyboard.append(row)
             row = []
-    if row:
-        keyboard.append(row)
+    if row: keyboard.append(row)
     keyboard.append([InlineKeyboardButton("🔙 Back", callback_data=back_callback)])
     return InlineKeyboardMarkup(keyboard)
 
 # ========== COMMAND HANDLERS ==========
 async def start(update: Update, context):
     user = update.effective_user
-    msg = (
-        f"<b>HELLO {user.mention_html()}, WELCOME TO THE VIP TTS BOT!</b>\n\n"
-        "<b>Send /voice to open the Interactive Control Panel!</b>"
-        f"{FOOTER}"
-    )
-    await update.message.reply_text(msg, parse_mode="HTML", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🎛️ OPEN CONTROL PANEL", callback_data='nav_main')]]), disable_web_page_preview=True)
-
-async def voice_panel_cmd(update: Update, context):
-    msg = "<b>🎛️ MASTER CONTROL PANEL</b>\n\n<b>Select a category below to customize your voice and speed:</b>"
+    msg = f"<b>HELLO {user.mention_html()}, WELCOME!</b>\n\n<b>Use /help to see all command details.</b>{FOOTER}"
     await update.message.reply_text(msg, parse_mode="HTML", reply_markup=kb_main_menu())
 
-# ========== THE NESTED BUTTON LOGIC ==========
+async def help_cmd(update: Update, context):
+    msg = (
+        "<b>📖 A to Z BOT USAGE DETAILS:</b>\n\n"
+        "<b>1️⃣ /tts &lt;text&gt;</b> - Text ko voice mein badalne ke liye.\n"
+        "<b>2) /voice</b> - Voice selection menu kholne ke liye.\n"
+        "<b>3) /lang</b> - Language badalne ke liye.\n"
+        "<b>4) /setvoice &lt;name&gt;</b> - Direct voice set karne ke liye.\n"
+        "<b>5) /sample &lt;name&gt;</b> - Voice ka sample sunne ke liye.\n"
+        "<b>6) /help</b> - Yeh menu dekhne ke liye."
+        f"{FOOTER}"
+    )
+    await update.message.reply_text(msg, parse_mode="HTML", reply_markup=kb_help_details())
+
+# ========== CALLBACK HANDLER ==========
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = query.data
+    await query.answer()
 
-    # Main Navigation
     if data == 'nav_main':
-        await query.answer()
-        await query.edit_message_text("<b>🎛️ MASTER CONTROL PANEL</b>\n\n<b>Select an option:</b>", parse_mode="HTML", reply_markup=kb_main_menu())
-    
-    elif data == 'nav_best':
-        await query.answer()
-        await query.edit_message_text("<b>⭐ CURATED BEST VOICES</b>\n\n<b>Most realistic voices handpicked for you:</b>", parse_mode="HTML", reply_markup=kb_voice_grid(BEST_VOICES, 'v3', 'nav_main'))
-        
+        await query.edit_message_text("<b>MASTER CONTROL PANEL</b>", parse_mode="HTML", reply_markup=kb_main_menu())
+    elif data == 'nav_help':
+        await query.edit_message_text("<b>📖 HELP DETAILS:</b>\nUse /tts for speech.\nUse /sample for demo.", parse_mode="HTML", reply_markup=kb_help_details())
+    elif data == 'nav_lang':
+        await query.edit_message_text("<b>🌐 SELECT LANGUAGE:</b>", parse_mode="HTML", reply_markup=kb_lang_menu())
+    elif data.startswith('setl_'):
+        lang = data.split('_')[1]
+        context.user_data['user_language'] = lang
+        await query.edit_message_text(f"<b>✅ Language set to {lang.upper()}</b>", parse_mode="HTML", reply_markup=kb_lang_menu())
     elif data == 'nav_v3':
-        await query.answer()
-        await query.edit_message_text("<b>🎙️ BULBUL V3 (PREMIUM VOICES)</b>\n\n<b>Choose a gender:</b>", parse_mode="HTML", reply_markup=kb_gender_menu('v3'))
-        
+        await query.edit_message_text("<b>Bulbul V3 Male:</b>", parse_mode="HTML", reply_markup=kb_voice_grid(VOICES_V3_MALE, 'v3', 'nav_main'))
     elif data == 'nav_v1':
-        await query.answer()
-        await query.edit_message_text("<b>📻 BULBUL V1 (CLASSIC VOICES)</b>\n\n<b>Choose a gender:</b>", parse_mode="HTML", reply_markup=kb_gender_menu('v1'))
-        
-    elif data == 'nav_speed':
-        await query.answer()
-        await query.edit_message_text("<b>⚙️ SPEED CONTROL</b>\n\n<b>Adjust how fast the bot speaks:</b>", parse_mode="HTML", reply_markup=kb_speed_menu())
-
-    # Speed Setup
-    elif data.startswith('spd_'):
-        speed_val = float(data.split('_')[1])
-        context.user_data['user_pace'] = speed_val
-        await query.answer(f"Speed set to {speed_val}x!")
-        await query.edit_message_text(f"<b>✅ Speed successfully set to {speed_val}x!</b>", parse_mode="HTML", reply_markup=kb_speed_menu())
-
-    # Gender Selections (Shows grids)
-    elif data == 'gen_v3_m':
-        await query.answer()
-        await query.edit_message_text("<b>👦 PREMIUM MALE VOICES (V3)</b>", parse_mode="HTML", reply_markup=kb_voice_grid(VOICES_V3_MALE, 'v3', 'nav_v3'))
-    elif data == 'gen_v3_f':
-        await query.answer()
-        await query.edit_message_text("<b>👧 PREMIUM FEMALE VOICES (V3)</b>", parse_mode="HTML", reply_markup=kb_voice_grid(VOICES_V3_FEMALE, 'v3', 'nav_v3'))
-    elif data == 'gen_v1_m':
-        await query.answer()
-        await query.edit_message_text("<b>👦 CLASSIC MALE VOICES (V1)</b>", parse_mode="HTML", reply_markup=kb_voice_grid(VOICES_V1_MALE, 'v1', 'nav_v1'))
-    elif data == 'gen_v1_f':
-        await query.answer()
-        await query.edit_message_text("<b>👧 CLASSIC FEMALE VOICES (V1)</b>", parse_mode="HTML", reply_markup=kb_voice_grid(VOICES_V1_FEMALE, 'v1', 'nav_v1'))
-
-    # Final Voice Setup
+        await query.edit_message_text("<b>Bulbul V1 Male:</b>", parse_mode="HTML", reply_markup=kb_voice_grid(VOICES_V1_MALE, 'v1', 'nav_main'))
     elif data.startswith('setv_'):
-        parts = data.split('_')
-        version = "bulbul:v3" if parts[1] == 'v3' else "bulbul:v1"
-        voice_name = parts[2]
-        
-        context.user_data['user_voice'] = voice_name
-        context.user_data['user_model'] = version
-        
-        await query.answer(f"Voice set to {voice_name.capitalize()} ({version})")
-        await query.edit_message_text(
-            f"<b>✅ PERFECT!</b>\n\n<b>Voice:</b> {voice_name.capitalize()}\n<b>Model:</b> {version.upper()}\n\n<b>Now use /tts &lt;text&gt; to generate speech!</b>",
-            parse_mode="HTML", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Main Menu", callback_data='nav_main')]])
-        )
+        v = data.split('_')[1]
+        name = data.split('_')[2]
+        context.user_data['user_voice'] = name
+        context.user_data['user_model'] = f"bulbul:{v}"
+        await query.edit_message_text(f"<b>✅ Voice set to {name.upper()} ({v.upper()})</b>", parse_mode="HTML", reply_markup=kb_help_details())
 
-# ========== MANUAL COMMANDS (Direct Set) ==========
-async def set_voice_cmd(update: Update, context):
-    if not context.args:
-        return await update.message.reply_text("<b>USAGE: /setvoice ritu</b>\n<i>Pro tip: Use /voice for a better button menu!</i>", parse_mode="HTML")
-    voice = context.args[0].lower()
-    context.user_data['user_voice'] = voice
-    await update.message.reply_text(f"<b>✅ VOICE UPDATED TO: {voice.upper()}</b>", parse_mode="HTML")
-
-# ========== TTS GENERATOR ==========
+# ========== TTS LOGIC ==========
 async def text_to_speech(update: Update, context):
-    text = " ".join(context.args)
-    if not text:
-        return await update.message.reply_text("<b>⚠️ INPUT TEXT REQUIRED! EXAMPLE: /tts Hello Boss</b>", parse_mode="HTML")
-
-    await update.message.chat.send_action(action="record_voice")
+    text = " ".join(context.args) if context.args else update.message.text
+    if not text or text.startswith('/'): return
     
-    # Fetch user preferences
     voice = context.user_data.get('user_voice', DEFAULT_SPEAKER)
     model = context.user_data.get('user_model', DEFAULT_MODEL)
     lang = context.user_data.get('user_language', DEFAULT_LANGUAGE)
-    pace = context.user_data.get('user_pace', DEFAULT_PACE)
     
-    processing = await update.message.reply_text(f"<b>🎵 PROCESSING...</b>\n<i>Voice: {voice.capitalize()} | Model: {model[-2:].upper()} | Speed: {pace}x</i>", parse_mode="HTML")
-
+    processing = await update.message.reply_text("<b>🎵 Generating...</b>", parse_mode="HTML")
     try:
-        response = requests.post(
-            "https://api.sarvam.ai/text-to-speech",
-            headers={"api-subscription-key": SARVAM_API_KEY, "Content-Type": "application/json"},
-            json={
-                "text": text, 
-                "target_language_code": lang, 
-                "speaker": voice,
-                "model": model, 
-                "speech_sample_rate": SAMPLE_RATE, 
-                "enable_preprocessing": True,
-                "pace": pace # <--- Speed Control sent to API
-            },
-            timeout=30
-        )
-        
-        if response.status_code != 200:
-            await processing.edit_text(f"<b>❌ API ERROR: {response.status_code}</b>\nDetails: {response.text[:100]}", parse_mode="HTML")
-            return
-            
-        data = response.json()
-        audio_b64 = data.get("audios", [None])[0]
-
-        if not audio_b64:
-            await processing.edit_text("<b>❌ FAILED TO RECEIVE AUDIO FROM API.</b>", parse_mode="HTML")
-            return
-
+        res = requests.post("https://api.sarvam.ai/text-to-speech", 
+            headers={"api-subscription-key": SARVAM_API_KEY},
+            json={"text": text, "target_language_code": lang, "speaker": voice, "model": model})
+        audio_b64 = res.json().get("audios")[0]
         audio_file = io.BytesIO(base64.b64decode(audio_b64))
         audio_file.name = "voice.mp3"
-
-        caption = f"<b>🔊 VOICE: {voice.upper()} ({model[-2:].upper()})</b>\n<b>⚡ SPEED: {pace}x</b>{FOOTER}"
-        await update.message.reply_voice(voice=audio_file, caption=caption, parse_mode="HTML")
+        await update.message.reply_voice(voice=audio_file, caption=f"<b>🔊 {voice.upper()}</b>{FOOTER}", parse_mode="HTML")
         await processing.delete()
-
-    except Exception as e:
-        logger.error(f"TTS Error: {e}")
-        await update.message.reply_text(f"<b>❌ ERROR: {str(e)[:100]}</b>", parse_mode="HTML")
-
-async def error_handler(update: Update, context):
-    logger.error(f"CRITICAL Update error: {context.error}")
+    except:
+        await processing.edit_text("<b>❌ Error!</b>")
 
 def main():
     threading.Thread(target=keep_alive, daemon=True).start()
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("voice", voice_panel_cmd))  # The Master Menu Command
-    app.add_handler(CommandHandler("setvoice", set_voice_cmd)) 
-    app.add_handler(CommandHandler("tts", text_to_speech))
-    
-    # Handle all the nested button clicks
+    app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("voice", start))
+    app.add_handler(CommandHandler("lang", lambda u, c: u.message.reply_text("<b>Select Language:</b>", parse_mode="HTML", reply_markup=kb_lang_menu())))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_to_speech))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_error_handler(error_handler)
+    app.run_polling(drop_pending_updates=True)
 
-    logger.info("🚀 BOT DEPLOYED WITH NESTED UI & SPEED CONTROL!")
-    app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
-
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()
