@@ -118,7 +118,7 @@ async def text_to_speech(update: Update, context):
     pace = context.user_data.get('user_pace', DEFAULT_PACE)
     lang = context.user_data.get('user_language', DEFAULT_LANGUAGE)
     
-    proc = await update.message.reply_text("<b>🎵 Generating...</b>", parse_mode="HTML")
+    proc = await update.message.reply_text("<b>🎵 HOLD ON BABE 😘... GENERATING...</b>", parse_mode="HTML")
     try:
         res = requests.post("https://api.sarvam.ai/text-to-speech", 
             headers={"api-subscription-key": SARVAM_API_KEY, "Content-Type": "application/json"},
@@ -133,7 +133,7 @@ async def text_to_speech(update: Update, context):
             }, timeout=25)
         
         if res.status_code != 200:
-            return await proc.edit_text(f"<b>❌ API ERROR: {res.status_code}</b>\n<i>Shayad Credits khatam hain ya API Key block hai!</i>", parse_mode="HTML")
+            return await proc.edit_text(f"<b>❌ API ERROR: {res.status_code}</b>\n<i>SOMETHING ERROR!</i>", parse_mode="HTML")
 
         data = res.json()
         audio_b64 = data.get("audios", [None])[0] or data.get("audio_content")
