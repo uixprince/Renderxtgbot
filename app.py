@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # ========== CONFIG ==========
 TELEGRAM_BOT_TOKEN = "8797339500:AAHDrXZnOsBvltKhvjfy1C5RkFUnDGTMwqQ"
-SARVAM_API_KEY = "sk_g7nu0ztm_bJSAdtnwoM6aTPXVoF30F9WV" 
+SARVAM_API_KEY = "sk_v1horf68_0oOQeyyFDeZuf1z7YYs1ewms" 
 
 DEFAULT_MODEL = "bulbul:v3"
 DEFAULT_SPEAKER = "aditya"
